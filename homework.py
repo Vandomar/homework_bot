@@ -156,10 +156,10 @@ def main():
             time.sleep(RETRY_TIME)
         except Exception as error:
             logger.error(error)
-            message_t = str(error)
-            if message_t != ERROR_CACHE_MESSAGE:
-                send_message(bot, message_t)
-                ERROR_CACHE_MESSAGE = message_t
+            message = str(error)
+            if message != ERROR_CACHE_MESSAGE:
+                send_message(bot, message)
+                ERROR_CACHE_MESSAGE = message
         time.sleep(RETRY_TIME)
 
 
