@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(
     level=logging.DEBUG,
-    filename='program.log', 
+    filename='program.log',
     format='%(asctime)s, %(levelname)s, %(message)s, %(name)s'
 )
 logger = logging.getLogger(__name__)
