@@ -1,11 +1,12 @@
 
+import json
 import logging
 import os
 import time
-import requests
 from http import HTTPStatus
 from logging.handlers import RotatingFileHandler
 
+import requests
 import telegram
 from dotenv import load_dotenv
 
@@ -54,9 +55,9 @@ def send_message(bot, message):
     """
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.info('Сообщение в чат {TELEGRAM_CHAT_ID}: {message}')
-    except Exception:
-        logger.error('Ошибка отправки сообщения в телеграм')
+        logger.info(f'Сообщение в чат {TELEGRAM_CHAT_ID}: {message}')
+    except telegram.TelegramError as error:
+        logger.error(f'Ошибка отправки сообщения в телеграм {error}')
 
 
 def get_api_answer(current_timestamp):
@@ -72,16 +73,22 @@ def get_api_answer(current_timestamp):
                                          headers=HEADERS,
                                          params=params
                                          )
-    except Exception as error:
-        logging.error(f'Ошибка при запросе к основному API: {error}')
-        raise Exception(f'Ошибка при запросе к основному API: {error}')
-    if homework_statuses.status_code != HTTPStatus.OK:
-        status_code = homework_statuses.status_code
-        logging.error(f'Ошибка {status_code}')
-        raise Exception(f'Ошибка {status_code}')
+        if homework_statuses.status_code != HTTPStatus.OK:
+            status_code = homework_statuses.status_code
+            logger.error(f'Ошибка {status_code}')
+            raise Exception(f'Ошибка {status_code}')
+    except requests.exceptions.Timeout:
+        logger.error('Время ожидания истекло')
+        raise Exception('Ошибка время ожидания истекло')
+    except requests.exceptions.TooManyRedirects:
+        logger.error('Путь к ссылке не найден')
+        raise Exception('Путь не найден, попробуйте другую ссылку')
+    except requests.exceptions.HTTPError as error:
+        logger.error('Ошибка при запросе к основному API: {error}')
+        raise SystemExit(error)
     try:
         return homework_statuses.json()
-    except ValueError:
+    except json.decoder.JSONDecodeError:
         logger.error('Ошибка парсинга ответа из формата json')
         raise ValueError('Ошибка парсинга ответа из формата json')
 
@@ -132,8 +139,7 @@ def check_tokens():
     Если отсутствует хотя бы одна переменная окружения — функция
     должна вернуть False, иначе — True.
     """
-    if all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
-        return True
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
@@ -141,10 +147,10 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     STATUS = ''
-    ERROR_CACHE_MESSAGE = ''
+    ERROR_CACHE_MESSAGE = 'Отсутствуют одна или несколько переменных окружения'
     if not check_tokens():
-        logger.critical('Отсутствуют одна или несколько переменных окружения')
-        raise Exception('Отсутствуют одна или несколько переменных окружения')
+        logger.critical(f'{ERROR_CACHE_MESSAGE}')
+        raise Exception(f'{ERROR_CACHE_MESSAGE}')
     while True:
         try:
             response = get_api_answer(current_timestamp)
