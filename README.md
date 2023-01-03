@@ -4,8 +4,15 @@ python telegram bot
 
 Создайте пустого бота с помощью @BotFather - зададайте ему имя и получим токен (ключ доступа)
 Установим питоновскую библиотеку pytelegrambotapi, с удобной обёрткой для телеграма. Это можно сделать, например, с помощью пакетного менеджера pip. Все установленные библиотеки записаны в requirements.txt.
+
 Для запуска бота необходимо ввести токены в файле .env
 Формат файла:
 PRACTICUM_TOKEN=PRACTICUM_TOKEN
 TELEGRAM_TOKEN=TELEGRAM_TOKEN
 TELEGRAM_CHAT_ID=TELEGRAM_CHAT_ID
+
+Присутствует реализация логов
+
+Стэк:
+Python-telegram-bot
+
